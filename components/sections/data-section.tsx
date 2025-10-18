@@ -19,7 +19,7 @@ interface DataPlan {
   ngnPrice: number
 }
 
-const USDT_ADDRESS = "0xD1B77E5BE43d705549E38a23b59CF5365f17E227"
+const USDT_ADDRESS = "0x0B38e83B86d491735fEaa0a791F65c2B99535396"
 const USDT_ABI = [
   {
     constant: false,
@@ -81,6 +81,13 @@ export default function DataSection() {
       setRate(rateData.rate)
     }
   }, [rateData])
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(""), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [error])
 
   const plans = network && plansData?.plansByNetwork?.[network] ? plansData.plansByNetwork[network] : []
   const networks = plansData?.networks || []
@@ -178,7 +185,7 @@ export default function DataSection() {
       </CardHeader>
       <CardContent className="space-y-5 pt-6">
         {error && (
-          <div className="p-4 bg-red-500/20 border border-red-500/50 text-red-300 rounded-lg backdrop-blur-sm">
+          <div className="p-4 bg-purple-500/20 border border-purple-500/50 text-black rounded-lg backdrop-blur-sm animate-fade">
             {error}
           </div>
         )}

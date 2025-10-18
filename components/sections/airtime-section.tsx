@@ -18,7 +18,7 @@ interface AirtimeNetwork {
   code?: string
 }
 
-const USDT_ADDRESS = "0xD1B77E5BE43d705549E38a23b59CF5365f17E227"
+const USDT_ADDRESS = "0x0B38e83B86d491735fEaa0a791F65c2B99535396"
 const USDT_ABI = [
   {
     constant: false,
