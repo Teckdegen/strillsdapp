@@ -1,0 +1,69 @@
+import { type NextRequest, NextResponse } from "next/server"
+import { HARDCODED_DATA } from "@/lib/data/hardcoded-data"
+import { generateRequestId } from "@/lib/utils/request-id"
+import { callBillApi } from "@/lib/utils/api-client"
+
+let cachedDataPlans: any = null
+let lastDataPlansFetch = 0
+
+export async function POST(request: NextRequest) {
+  try {
+    const now = Date.now()
+    if (now - lastDataPlansFetch > 60000) {
+      try {
+        const requestId = generateRequestId()
+        const result = await callBillApi("/DataPurchase/getDataInfo", {})
+        if (result?.data) {
+          cachedDataPlans = result
+          lastDataPlansFetch = now
+        }
+      } catch (err) {
+        // Silently fail and use cached/hardcoded data
+      }
+    }
+
+    const data = cachedDataPlans || HARDCODED_DATA.data
+    const providers = data.data?.[0]?.providers || []
+
+    const plansByNetwork: Record<string, any[]> = {}
+    providers.forEach((provider: any) => {
+      const networkName = provider.name
+      plansByNetwork[networkName] =
+        provider.providerPlans?.map((plan: any) => ({
+          id: plan.code,
+          name: plan.name,
+          amount: plan.amount,
+          ngnPrice: plan.amount,
+          network: networkName,
+        })) || []
+    })
+
+    return NextResponse.json({
+      success: true,
+      networks: providers.map((p: any) => p.name),
+      plansByNetwork,
+      allPlans: Object.values(plansByNetwork).flat(),
+    })
+  } catch (error: any) {
+    const providers = HARDCODED_DATA.data.data[0].providers
+    const plansByNetwork: Record<string, any[]> = {}
+    providers.forEach((provider: any) => {
+      const networkName = provider.name
+      plansByNetwork[networkName] =
+        provider.providerPlans?.map((plan: any) => ({
+          id: plan.code,
+          name: plan.name,
+          amount: plan.amount,
+          ngnPrice: plan.amount,
+          network: networkName,
+        })) || []
+    })
+
+    return NextResponse.json({
+      success: true,
+      networks: providers.map((p: any) => p.name),
+      plansByNetwork,
+      allPlans: Object.values(plansByNetwork).flat(),
+    })
+  }
+}
