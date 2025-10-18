@@ -7,6 +7,7 @@ let cachedElectricityData: any = null
 let lastElectricityFetch = 0
 
 export async function POST(request: NextRequest) {
+  let updated = false
   try {
     const now = Date.now()
     if (now - lastElectricityFetch > 60000) {
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
         if (result?.data) {
           cachedElectricityData = result
           lastElectricityFetch = now
+          updated = true
         }
       } catch (err) {
         // Silently fail and use cached/hardcoded data
@@ -40,6 +42,7 @@ export async function POST(request: NextRequest) {
             code: plan.code,
           })) || [],
       ),
+      updated,
     })
   } catch (error: any) {
     const providers = HARDCODED_DATA.electricity.data[0].providers
@@ -58,6 +61,7 @@ export async function POST(request: NextRequest) {
             code: plan.code,
           })) || [],
       ),
+      updated,
     })
   }
 }

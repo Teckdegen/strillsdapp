@@ -7,6 +7,7 @@ let cachedCableData: any = null
 let lastCableFetch = 0
 
 export async function POST(request: NextRequest) {
+  let updated = false
   try {
     const now = Date.now()
     if (now - lastCableFetch > 60000) {
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
         if (result?.data) {
           cachedCableData = result
           lastCableFetch = now
+          updated = true
         }
       } catch (err) {
         // Silently fail and use cached/hardcoded data
@@ -42,6 +44,7 @@ export async function POST(request: NextRequest) {
             provider: provider.name,
           })) || [],
       ),
+      updated,
     })
   } catch (error: any) {
     const providers = HARDCODED_DATA.cable.data[0].providers
@@ -62,6 +65,7 @@ export async function POST(request: NextRequest) {
             provider: provider.name,
           })) || [],
       ),
+      updated,
     })
   }
 }

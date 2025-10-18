@@ -43,6 +43,7 @@ export default function DataSection() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [rate, setRate] = useState<number>(1650)
+  const [message, setMessage] = useState("")
 
   const {
     data: plansData,
@@ -88,6 +89,14 @@ export default function DataSection() {
       return () => clearTimeout(timer)
     }
   }, [error])
+
+  useEffect(() => {
+    if (plansData?.updated) {
+      setMessage("Plans updated")
+      const timer = setTimeout(() => setMessage(""), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [plansData?.updated])
 
   const plans = network && plansData?.plansByNetwork?.[network] ? plansData.plansByNetwork[network] : []
   const networks = plansData?.networks || []
@@ -184,9 +193,9 @@ export default function DataSection() {
         </div>
       </CardHeader>
       <CardContent className="space-y-5 pt-6">
-        {error && (
+        {message && (
           <div className="p-4 bg-purple-500/20 border border-purple-500/50 text-black rounded-lg backdrop-blur-sm animate-fade">
-            {error}
+            {message}
           </div>
         )}
         {success && (

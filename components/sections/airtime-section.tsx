@@ -71,6 +71,13 @@ export default function AirtimeSection() {
   const networks = networksData?.networks || ["MTN NG", "AIRTEL NG", "GLO NG", "9MOBILE"]
   const rate = rateData?.rate || 1
 
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(""), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [error])
+
   const handlePay = async () => {
     if (!network || !customAmount || !phone || !walletClient) {
       setError("Please fill all fields and connect wallet")
@@ -155,7 +162,7 @@ export default function AirtimeSection() {
       </CardHeader>
       <CardContent className="space-y-5 pt-6">
         {error && (
-          <div className="p-4 bg-red-500/20 border border-red-500/50 text-red-300 rounded-lg backdrop-blur-sm">
+          <div className="p-4 bg-purple-500/20 border border-purple-500/50 text-black rounded-lg backdrop-blur-sm animate-fade">
             {error}
           </div>
         )}

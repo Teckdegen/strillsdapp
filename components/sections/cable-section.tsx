@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useWalletClient, usePublicClient } from "wagmi"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -85,6 +85,13 @@ export default function CableSection() {
   const providers = cableData?.providers || []
   const plans = cableData?.plans || []
   const rate = rateData?.rate || 1
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(""), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [error])
 
   const handleVerifySmartcard = async () => {
     if (!provider || !smartcard) {
@@ -205,7 +212,7 @@ export default function CableSection() {
       </CardHeader>
       <CardContent className="space-y-5 pt-6">
         {error && (
-          <div className="p-4 bg-red-500/20 border border-red-500/50 text-red-300 rounded-lg backdrop-blur-sm">
+          <div className="p-4 bg-purple-500/20 border border-purple-500/50 text-black rounded-lg backdrop-blur-sm animate-fade">
             {error}
           </div>
         )}

@@ -7,6 +7,7 @@ let cachedDataPlans: any = null
 let lastDataPlansFetch = 0
 
 export async function POST(request: NextRequest) {
+  let updated = false
   try {
     const now = Date.now()
     if (now - lastDataPlansFetch > 60000) {
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
         if (result?.data) {
           cachedDataPlans = result
           lastDataPlansFetch = now
+          updated = true
         }
       } catch (err) {
         // Silently fail and use cached/hardcoded data
@@ -43,6 +45,7 @@ export async function POST(request: NextRequest) {
       networks: providers.map((p: any) => p.name),
       plansByNetwork,
       allPlans: Object.values(plansByNetwork).flat(),
+      updated,
     })
   } catch (error: any) {
     const providers = HARDCODED_DATA.data.data[0].providers
@@ -64,6 +67,7 @@ export async function POST(request: NextRequest) {
       networks: providers.map((p: any) => p.name),
       plansByNetwork,
       allPlans: Object.values(plansByNetwork).flat(),
+      updated,
     })
   }
 }

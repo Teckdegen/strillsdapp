@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
     const result = await callBillApi("/CableTV/verifyCustomer", {
       smartCardNumber,
       providerCode,
-      providerPlanCode,
+      providerPlanCode: providerPlanCode || "prepaid",
+      requestId,
     })
 
     if (!result.success) {
