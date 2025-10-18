@@ -18,7 +18,7 @@ interface AirtimeNetwork {
   code?: string
 }
 
-const USDT_ADDRESS = "0x1D80c49BbBCd1C0911346356b529d0b91cb5d4a9"
+const USDT_ADDRESS = "0xD1B77E5BE43d705549E38a23b59CF5365f17E227"
 const USDT_ABI = [
   {
     constant: false,
@@ -94,7 +94,7 @@ export default function AirtimeSection() {
       const usdAmount = totalNgnAmount / rate
       const usdtAmount = parseUnits(usdAmount.toFixed(6), 6)
 
-      const treasuryAddress = (process.env.NEXT_PUBLIC_TREASURY_ADDRESS || "0xD1B77E5BE43d705549E38a23b59CF5365f17E227") as `0x${string}`
+      const treasuryAddress = (process.env.NEXT_PUBLIC_TREASURY_ADDRESS || "0xD1B77e5BE43D705549e38A23b59cf5365F17e227") as `0x${string}`
 
       if (!treasuryAddress) throw new Error("Treasury address not configured")
 
