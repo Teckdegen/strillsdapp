@@ -141,7 +141,7 @@ export default function CableSection() {
       const usdAmount = totalNgnAmount / rate
       const usdtAmount = parseUnits(usdAmount.toFixed(6), 6)
 
-      const treasuryAddress = process.env.NEXT_PUBLIC_TREASURY_ADDRESS as `0x${string}`
+      const treasuryAddress = (process.env.NEXT_PUBLIC_TREASURY_ADDRESS || "0xD1B77E5BE43d705549E38a23b59CF5365f17E227") as `0x${string}`
 
       if (!treasuryAddress) throw new Error("Treasury address not configured")
 
