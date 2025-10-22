@@ -149,6 +149,7 @@ export default function DataSection() {
         await publicClient.waitForTransactionReceipt({ hash })
       }
 
+      // Purchase data using the Peyflex API
       const paymentRes = await fetch("/api/pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -197,6 +198,11 @@ export default function DataSection() {
         {message && (
           <div className="p-4 bg-purple-500/20 border border-purple-500/50 text-black rounded-lg backdrop-blur-sm animate-fade">
             {message}
+          </div>
+        )}
+        {error && (
+          <div className="p-4 bg-purple-500/20 border border-purple-500/50 text-black rounded-lg backdrop-blur-sm animate-fade">
+            {error}
           </div>
         )}
         {success && (

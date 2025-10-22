@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
           
           for (const network of networksResult.networks) {
             try {
+              // Get plans for this network using the correct endpoint
               const plansResult = await callPeyflexPublicApi("/api/data/plans/", {
                 network: network.code || network.id
               })
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
                 network: network.name,
               })) || []
             } catch (planError) {
+              console.error(`Error fetching plans for network ${network.name}:`, planError)
               plansByNetwork[network.name] = []
             }
           }
@@ -44,6 +46,7 @@ export async function POST(request: NextRequest) {
           updated = true
         }
       } catch (err) {
+        console.error("Error fetching data plans:", err)
         // Silently fail and use cached data
       }
     }
@@ -59,6 +62,7 @@ export async function POST(request: NextRequest) {
       fromApi: true,
     })
   } catch (error: any) {
+    console.error("Data plans API error:", error)
     return NextResponse.json({
       success: true,
       networks: [],

@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
           
           for (const provider of providersResult.providers) {
             try {
+              // Get plans for this provider using the correct endpoint
               const plansResult = await callPeyflexPublicApi(`/api/cable/plans/${provider.code || provider.id}/`)
               
               const providerPlans = plansResult.plans?.map((plan: any) => ({
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
               
               plans.push(...providerPlans)
             } catch (planError) {
+              console.error(`Error fetching plans for provider ${provider.name}:`, planError)
               // Continue with other providers even if one fails
             }
           }
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
           updated = true
         }
       } catch (err) {
+        console.error("Error fetching cable data:", err)
         // Silently fail and use cached data
       }
     }
@@ -62,6 +65,7 @@ export async function POST(request: NextRequest) {
       fromApi: true,
     })
   } catch (error: any) {
+    console.error("Cable plans API error:", error)
     return NextResponse.json({
       success: true,
       providers: [],

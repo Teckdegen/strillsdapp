@@ -51,6 +51,7 @@ export default function CableSection() {
   const [success, setSuccess] = useState("")
   const [verifying, setVerifying] = useState(false)
   const [customerName, setCustomerName] = useState("")
+  const [message, setMessage] = useState("")
 
   const { data: cableData, loading: loadingPlans } = useApiCache(
     "cable-plans",
@@ -85,10 +86,10 @@ export default function CableSection() {
   const rate = rateData?.rate || 1
 
   useEffect(() => {
-    if (cableData && cableData.fromApi && cableData.updated) {
-      setMessage("Cable providers updated")
-      const timer = setTimeout(() => setMessage(""), 3000)
-      return () => clearTimeout(timer)
+    if (cableData?.fromApi && cableData?.updated) {
+      setMessage("Cable providers updated");
+      const timer = setTimeout(() => setMessage(""), 3000);
+      return () => clearTimeout(timer);
     }
   }, [cableData])
 
@@ -218,6 +219,11 @@ export default function CableSection() {
         </div>
       </CardHeader>
       <CardContent className="space-y-5 pt-6">
+        {message && (
+          <div className="p-4 bg-purple-500/20 border border-purple-500/50 text-black rounded-lg backdrop-blur-sm animate-fade">
+            {message}
+          </div>
+        )}
         {error && (
           <div className="p-4 bg-purple-500/20 border border-purple-500/50 text-black rounded-lg backdrop-blur-sm animate-fade">
             {error}
