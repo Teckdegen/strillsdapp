@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { useAccount } from "wagmi"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,9 +12,66 @@ import CableSection from "@/components/sections/cable-section"
 
 type BillCategory = "data" | "airtime" | "electricity" | "cable"
 
-export default function Home() {
+// Client-only component that uses Wagmi hooks
+function WalletConnectedContent() {
   const { isConnected } = useAccount()
   const [activeCategory, setActiveCategory] = useState<BillCategory>("data")
+
+  if (!isConnected) {
+    return (
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Welcome to Strills</CardTitle>
+          <CardDescription>Pay your bills with USDT on the Flare blockchain</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center gap-4">
+          <p className="text-foreground/70 text-center max-w-md">
+            Connect your wallet to get started with paying your utility bills securely and instantly.
+          </p>
+          <ConnectButton />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Category Selector */}
+      <div className="flex gap-2 flex-wrap">
+        {(["data", "airtime", "electricity", "cable"] as const).map((category) => (
+          <Button
+            key={category}
+            onClick={() => setActiveCategory(category)}
+            variant={activeCategory === category ? "default" : "outline"}
+            className={`capitalize ${
+              activeCategory === category
+                ? "bg-primary text-primary-foreground"
+                : "border-border/50 hover:bg-card/50"
+            }`}
+          >
+            {category}
+          </Button>
+        ))}
+      </div>
+
+      {/* Content Sections */}
+      <div className="min-h-96">
+        {activeCategory === "data" && <DataSection />}
+        {activeCategory === "airtime" && <AirtimeSection />}
+        {activeCategory === "electricity" && <ElectricitySection />}
+        {activeCategory === "cable" && <CableSection />}
+      </div>
+    </div>
+  )
+}
+
+// Wrapper component that handles SSR
+export default function Home() {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -33,47 +90,13 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8">
-        {!isConnected ? (
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Welcome to Strills</CardTitle>
-              <CardDescription>Pay your bills with USDT on the Flare blockchain</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center gap-4">
-              <p className="text-foreground/70 text-center max-w-md">
-                Connect your wallet to get started with paying your utility bills securely and instantly.
-              </p>
-              <ConnectButton />
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-6">
-            {/* Category Selector */}
-            <div className="flex gap-2 flex-wrap">
-              {(["data", "airtime", "electricity", "cable"] as const).map((category) => (
-                <Button
-                  key={category}
-                  onClick={() => setActiveCategory(category)}
-                  variant={activeCategory === category ? "default" : "outline"}
-                  className={`capitalize ${
-                    activeCategory === category
-                      ? "bg-primary text-primary-foreground"
-                      : "border-border/50 hover:bg-card/50"
-                  }`}
-                >
-                  {category}
-                </Button>
-              ))}
-            </div>
-
-            {/* Content Sections */}
-            <div className="min-h-96">
-              {activeCategory === "data" && <DataSection />}
-              {activeCategory === "airtime" && <AirtimeSection />}
-              {activeCategory === "electricity" && <ElectricitySection />}
-              {activeCategory === "cable" && <CableSection />}
-            </div>
+        {!isMounted ? (
+          // Show loading state during SSR
+          <div className="flex items-center justify-center min-h-96">
+            <div className="text-foreground/70">Loading...</div>
           </div>
+        ) : (
+          <WalletConnectedContent />
         )}
       </main>
 

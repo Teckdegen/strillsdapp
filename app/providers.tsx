@@ -17,11 +17,6 @@ const config = getDefaultConfig({
 const queryClient = new QueryClient()
 
 export function Providers({ children }: { children: ReactNode }) {
-  // Only render WagmiProvider on the client side to avoid SSR issues
-  if (typeof window === "undefined") {
-    return <>{children}</>
-  }
-
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
