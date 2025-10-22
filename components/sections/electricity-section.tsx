@@ -171,6 +171,7 @@ export default function ElectricitySection() {
             disco,
             meterType,
             meterNumber,
+            customerName,
             phoneNumber: phone,
             amount: ngnAmount,
           },
