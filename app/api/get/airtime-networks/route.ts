@@ -12,12 +12,13 @@ export async function POST(request: NextRequest) {
       try {
         const result = await callPeyflexPublicApi("/api/airtime/networks/")
         
-        if (result) {
+        if (result && result.networks) {
           cachedAirtimeData = result
           lastAirtimeFetch = now
           updated = true
         }
       } catch (err) {
+        console.error("Error fetching airtime networks:", err)
         // Silently fail and use cached data
       }
     }
@@ -26,11 +27,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      networks: data.networks || [],
+      networks: data.networks?.map((n: any) => ({
+        id: n.code || n.id,
+        name: n.name,
+        code: n.code || n.id,
+      })) || [],
       updated,
       fromApi: true,
     })
   } catch (error: any) {
+    console.error("Airtime networks API error:", error)
     return NextResponse.json({
       success: true,
       networks: [],

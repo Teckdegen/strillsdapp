@@ -251,11 +251,17 @@ export default function ElectricitySection() {
                   <SelectValue placeholder="Select DISCO" />
                 </SelectTrigger>
                 <SelectContent className="bg-purple-950 border-purple-500/30">
-                  {discos.map((d: ElectricityDisco) => (
-                    <SelectItem key={d.id} value={d.code || d.id} className="text-white hover:bg-purple-500/20">
-                      {d.name}
+                  {discos.length > 0 ? (
+                    discos.map((d: ElectricityDisco) => (
+                      <SelectItem key={d.id} value={d.code || d.id} className="text-white hover:bg-purple-500/20">
+                        {d.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="empty" disabled className="text-gray-400">
+                      No DISCOs available
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -319,7 +325,7 @@ export default function ElectricitySection() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="phone" className="text-purple-300">
                 Phone Number
               </Label>

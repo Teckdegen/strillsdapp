@@ -14,12 +14,13 @@ export async function POST(request: NextRequest) {
           identifier: "electricity"
         })
         
-        if (result) {
+        if (result && result.plans) {
           cachedElectricityData = result
           lastElectricityFetch = now
           updated = true
         }
       } catch (err) {
+        console.error("Error fetching electricity plans:", err)
         // Silently fail and use cached/hardcoded data
       }
     }
@@ -33,22 +34,14 @@ export async function POST(request: NextRequest) {
         name: p.name,
         code: p.code || p.id,
       })) || [],
-      plans: data.plans?.flatMap(
-        (provider: any) =>
-          provider.plans?.map((plan: any) => ({
-            id: plan.code || plan.id,
-            name: plan.name,
-            code: plan.code || plan.id,
-          })) || [],
-      ) || [],
       updated,
       fromApi: true, // Indicate that this data is from the API
     })
   } catch (error: any) {
+    console.error("Electricity plans API error:", error)
     return NextResponse.json({
       success: true,
       providers: [],
-      plans: [],
       updated: false,
       fromApi: false, // Indicate that this data is from fallback
     })

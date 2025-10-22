@@ -70,7 +70,7 @@ export default function AirtimeSection() {
     { pollInterval: 5000, fallbackData: { rate: 1 } },
   )
 
-  const networks = networksData?.networks || ["MTN NG", "AIRTEL NG", "GLO NG", "9MOBILE"]
+  const networks = networksData?.networks || []
   const rate = rateData?.rate || 1
 
   useEffect(() => {
@@ -205,11 +205,17 @@ export default function AirtimeSection() {
                   <SelectValue placeholder="Select network" />
                 </SelectTrigger>
                 <SelectContent className="bg-purple-950 border-purple-500/30">
-                  {networks.map((net: string) => (
-                    <SelectItem key={net} value={net} className="text-white hover:bg-purple-500/20">
-                      {net}
+                  {networks.length > 0 ? (
+                    networks.map((net: AirtimeNetwork) => (
+                      <SelectItem key={net.id} value={net.code || net.id} className="text-white hover:bg-purple-500/20">
+                        {net.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="empty" disabled className="text-gray-400">
+                      No networks available
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>

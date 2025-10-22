@@ -261,7 +261,7 @@ export default function DataSection() {
                   <SelectValue placeholder="Select plan" />
                 </SelectTrigger>
                 <SelectContent className="bg-purple-950 border-purple-500/30">
-                  {plans.length > 0 ? (
+                  {plans && plans.length > 0 ? (
                     plans.map((p: DataPlan) => (
                       <SelectItem key={p.id} value={p.id} className="text-white hover:bg-purple-500/20">
                         <div className="flex items-center gap-2">
