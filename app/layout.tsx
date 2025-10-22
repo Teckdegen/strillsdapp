@@ -3,9 +3,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
-import dynamic from "next/dynamic"
-
-const Providers = dynamic(() => import("./providers"), { ssr: false })
+import { Providers } from "./providers"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
