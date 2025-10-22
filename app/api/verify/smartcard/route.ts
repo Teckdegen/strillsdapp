@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       smartCardNumber,
       providerCode,
       providerPlanCode: providerPlanCode || "prepaid",
-      requestId,
+      reference: requestId,
     })
 
     if (!result.success) {

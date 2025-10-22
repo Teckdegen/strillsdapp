@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
       meterNumber,
       providerCode,
       providerPlanCode: providerPlanCode || "prepaid",
+      reference: requestId,
     })
 
     if (!result.success) {

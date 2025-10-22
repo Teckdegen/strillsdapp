@@ -1,6 +1,6 @@
 // The SECRET_KEY should never be exposed to the client
 
-const API_BASE_URL = process.env.BASE_URL || "https://api.example.com"
+const API_BASE_URL = process.env.BASE_URL || "https://businessapi.cashwyre.com/api/v1.0"
 
 interface ApiHeaders {
   "Content-Type": string
