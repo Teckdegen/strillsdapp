@@ -109,6 +109,7 @@ export default function CableSection() {
         body: JSON.stringify({
           smartCardNumber: smartcard,
           providerCode: provider,
+          providerPlanCode: "prepaid", // Adding the missing providerPlanCode field
         }),
       })
 
