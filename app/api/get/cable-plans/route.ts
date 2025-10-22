@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { callPeyflexApiWithParams } from "@/lib/utils/api-client"
+import { callPeyflexPublicApi } from "@/lib/utils/api-client"
 
 let cachedCableData: any = null
 let lastCableFetch = 0
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     if (now - lastCableFetch > 60000) {
       try {
         // First get providers
-        const providersResult = await callPeyflexApiWithParams("/api/cable/providers/")
+        const providersResult = await callPeyflexPublicApi("/api/cable/providers/")
         
         if (providersResult && providersResult.providers) {
           // For each provider, get plans
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
           
           for (const provider of providersResult.providers) {
             try {
-              const plansResult = await callPeyflexApiWithParams(`/api/cable/plans/${provider.code || provider.id}/`)
+              const plansResult = await callPeyflexPublicApi(`/api/cable/plans/${provider.code || provider.id}/`)
               
               const providerPlans = plansResult.plans?.map((plan: any) => ({
                 id: plan.code || plan.id,

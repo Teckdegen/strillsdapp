@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { callPeyflexApiWithParams } from "@/lib/utils/api-client"
+import { callPeyflexPublicApi } from "@/lib/utils/api-client"
 
 let cachedAirtimeData: any = null
 let lastAirtimeFetch = 0
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const now = Date.now()
     if (now - lastAirtimeFetch > 60000) {
       try {
-        const result = await callPeyflexApiWithParams("/api/airtime/networks/")
+        const result = await callPeyflexPublicApi("/api/airtime/networks/")
         
         if (result) {
           cachedAirtimeData = result

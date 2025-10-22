@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { callPeyflexApiWithParams } from "@/lib/utils/api-client"
+import { callPeyflexPublicApi } from "@/lib/utils/api-client"
 
 let cachedDataPlans: any = null
 let lastDataPlansFetch = 0
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     if (now - lastDataPlansFetch > 60000) {
       try {
         // First get networks
-        const networksResult = await callPeyflexApiWithParams("/api/data/networks/")
+        const networksResult = await callPeyflexPublicApi("/api/data/networks/")
         
         if (networksResult && networksResult.networks) {
           // For each network, get plans
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
           
           for (const network of networksResult.networks) {
             try {
-              const plansResult = await callPeyflexApiWithParams("/api/data/plans/", {
+              const plansResult = await callPeyflexPublicApi("/api/data/plans/", {
                 network: network.code || network.id
               })
               

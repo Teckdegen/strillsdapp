@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { callPeyflexApi } from "@/lib/utils/api-client"
+import { callPeyflexPublicApi } from "@/lib/utils/api-client"
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    const result = await callPeyflexApi("/api/cable/verify/", {
+    const result = await callPeyflexPublicApi("/api/cable/verify/", {
       iuc: smartCardNumber,
       identifier: providerCode
     }, "POST")
