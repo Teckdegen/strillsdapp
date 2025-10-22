@@ -1,8 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { HARDCODED_DATA } from "@/lib/data/hardcoded-data"
-import { generateRequestId } from "@/lib/utils/request-id"
-// Example of how to import and use a new API client
-// import { callNewBillApi } from "@/lib/utils/api-client"
+import { callPeyflexApiWithParams } from "@/lib/utils/api-client"
 
 let cachedDataPlans: any = null
 let lastDataPlansFetch = 0
@@ -13,66 +10,62 @@ export async function POST(request: NextRequest) {
     const now = Date.now()
     if (now - lastDataPlansFetch > 60000) {
       try {
-        const requestId = generateRequestId()
-        // Example of how to use a new API client
-        // const result = await callNewBillApi("/data/plans", { requestId })
-        const result = await callBillApi("/DataPurchase/getDataInfo", {})
-        if (result?.data) {
-          cachedDataPlans = result
+        // First get networks
+        const networksResult = await callPeyflexApiWithParams("/api/data/networks/")
+        
+        if (networksResult && networksResult.networks) {
+          // For each network, get plans
+          const plansByNetwork: Record<string, any[]> = {}
+          
+          for (const network of networksResult.networks) {
+            try {
+              const plansResult = await callPeyflexApiWithParams("/api/data/plans/", {
+                network: network.code || network.id
+              })
+              
+              plansByNetwork[network.name] = plansResult.plans?.map((plan: any) => ({
+                id: plan.code || plan.id,
+                name: plan.name,
+                amount: plan.amount,
+                ngnPrice: plan.amount,
+                network: network.name,
+              })) || []
+            } catch (planError) {
+              plansByNetwork[network.name] = []
+            }
+          }
+          
+          cachedDataPlans = {
+            networks: networksResult.networks.map((n: any) => n.name),
+            plansByNetwork
+          }
+          
           lastDataPlansFetch = now
           updated = true
         }
       } catch (err) {
-        // Silently fail and use cached/hardcoded data
+        // Silently fail and use cached data
       }
     }
 
-    const data = cachedDataPlans || HARDCODED_DATA.data
-    const providers = data.data?.[0]?.providers || []
-
-    const plansByNetwork: Record<string, any[]> = {}
-    providers.forEach((provider: any) => {
-      const networkName = provider.name
-      plansByNetwork[networkName] =
-        provider.providerPlans?.map((plan: any) => ({
-          id: plan.code,
-          name: plan.name,
-          amount: plan.amount,
-          ngnPrice: plan.amount,
-          network: networkName,
-        })) || []
-    })
+    const data = cachedDataPlans || { networks: [], plansByNetwork: {} }
 
     return NextResponse.json({
       success: true,
-      networks: providers.map((p: any) => p.name),
-      plansByNetwork,
-      allPlans: Object.values(plansByNetwork).flat(),
+      networks: data.networks || [],
+      plansByNetwork: data.plansByNetwork || {},
+      allPlans: Object.values(data.plansByNetwork || {}).flat(),
       updated,
-      fromApi: true, // Indicate that this data is from the API
+      fromApi: true,
     })
   } catch (error: any) {
-    const providers = HARDCODED_DATA.data.data[0].providers
-    const plansByNetwork: Record<string, any[]> = {}
-    providers.forEach((provider: any) => {
-      const networkName = provider.name
-      plansByNetwork[networkName] =
-        provider.providerPlans?.map((plan: any) => ({
-          id: plan.code,
-          name: plan.name,
-          amount: plan.amount,
-          ngnPrice: plan.amount,
-          network: networkName,
-        })) || []
-    })
-
     return NextResponse.json({
       success: true,
-      networks: providers.map((p: any) => p.name),
-      plansByNetwork,
-      allPlans: Object.values(plansByNetwork).flat(),
+      networks: [],
+      plansByNetwork: {},
+      allPlans: [],
       updated: false,
-      fromApi: false, // Indicate that this data is from fallback
+      fromApi: false,
     })
   }
 }

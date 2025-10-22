@@ -1,7 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { HARDCODED_DATA } from "@/lib/data/hardcoded-data"
-import { generateRequestId } from "@/lib/utils/request-id"
-import { callBillApi } from "@/lib/utils/api-client"
+import { callPeyflexApiWithParams } from "@/lib/utils/api-client"
 
 let cachedCableData: any = null
 let lastCableFetch = 0
@@ -12,62 +10,64 @@ export async function POST(request: NextRequest) {
     const now = Date.now()
     if (now - lastCableFetch > 60000) {
       try {
-        const requestId = generateRequestId()
-        const result = await callBillApi("/CableTV/getCableTVInfo", {})
-        if (result?.data) {
-          cachedCableData = result
+        // First get providers
+        const providersResult = await callPeyflexApiWithParams("/api/cable/providers/")
+        
+        if (providersResult && providersResult.providers) {
+          // For each provider, get plans
+          const plans: any[] = []
+          
+          for (const provider of providersResult.providers) {
+            try {
+              const plansResult = await callPeyflexApiWithParams(`/api/cable/plans/${provider.code || provider.id}/`)
+              
+              const providerPlans = plansResult.plans?.map((plan: any) => ({
+                id: plan.code || plan.id,
+                name: plan.name,
+                amount: plan.amount,
+                ngnPrice: plan.amount,
+                provider: provider.name,
+              })) || []
+              
+              plans.push(...providerPlans)
+            } catch (planError) {
+              // Continue with other providers even if one fails
+            }
+          }
+          
+          cachedCableData = {
+            providers: providersResult.providers.map((p: any) => ({
+              id: p.code || p.id,
+              name: p.name,
+              code: p.code || p.id,
+            })),
+            plans
+          }
+          
           lastCableFetch = now
           updated = true
         }
       } catch (err) {
-        // Silently fail and use cached/hardcoded data
+        // Silently fail and use cached data
       }
     }
 
-    const data = cachedCableData || HARDCODED_DATA.cable
-    const providers = data.data?.[0]?.providers || []
+    const data = cachedCableData || { providers: [], plans: [] }
 
     return NextResponse.json({
       success: true,
-      providers: providers.map((p: any) => ({
-        id: p.code,
-        name: p.name,
-        code: p.code,
-      })),
-      plans: providers.flatMap(
-        (provider: any) =>
-          provider.providerPlans?.map((plan: any) => ({
-            id: plan.code,
-            name: plan.name,
-            amount: plan.amount,
-            ngnPrice: plan.amount,
-            provider: provider.name,
-          })) || [],
-      ),
+      providers: data.providers || [],
+      plans: data.plans || [],
       updated,
-      fromApi: true, // Indicate that this data is from the API
+      fromApi: true,
     })
   } catch (error: any) {
-    const providers = HARDCODED_DATA.cable.data[0].providers
     return NextResponse.json({
       success: true,
-      providers: providers.map((p: any) => ({
-        id: p.code,
-        name: p.name,
-        code: p.code,
-      })),
-      plans: providers.flatMap(
-        (provider: any) =>
-          provider.providerPlans?.map((plan: any) => ({
-            id: plan.code,
-            name: plan.name,
-            amount: plan.amount,
-            ngnPrice: plan.amount,
-            provider: provider.name,
-          })) || [],
-      ),
+      providers: [],
+      plans: [],
       updated: false,
-      fromApi: false, // Indicate that this data is from fallback
+      fromApi: false,
     })
   }
 }

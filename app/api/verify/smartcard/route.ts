@@ -1,31 +1,22 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { generateRequestId } from "@/lib/utils/request-id"
-import { callBillApi } from "@/lib/utils/api-client"
+import { callPeyflexApi } from "@/lib/utils/api-client"
 
 export async function POST(request: NextRequest) {
   try {
-    const { smartCardNumber, providerCode, providerPlanCode } = await request.json()
+    const { smartCardNumber, providerCode } = await request.json()
 
-    if (!smartCardNumber || !providerCode || !providerPlanCode) {
+    if (!smartCardNumber || !providerCode) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    const requestId = generateRequestId()
-
-    const result = await callBillApi("/CableTV/verifyCustomer", {
-      smartCardNumber,
-      providerCode,
-      providerPlanCode: providerPlanCode || "prepaid",
-      reference: requestId,
-    })
-
-    if (!result.success) {
-      return NextResponse.json({ error: result.error || "Verification failed" }, { status: 400 })
-    }
+    const result = await callPeyflexApi("/api/cable/verify/", {
+      iuc: smartCardNumber,
+      identifier: providerCode
+    }, "POST")
 
     return NextResponse.json({
       success: true,
-      customerName: result.customerName || "Customer",
+      customerName: result.customerName || result.name || "Customer",
       smartCardNumber,
     })
   } catch (error: any) {

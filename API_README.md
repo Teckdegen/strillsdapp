@@ -37,15 +37,102 @@ All fetch calls follow consistent patterns:
 
 ## Peyflex API Endpoints
 
-### 1. Get Electricity Plans
+### 1. Get Airtime Networks
+- **Endpoint**: `/api/airtime/networks/`
+- **Method**: GET
+- **Purpose**: Fetch available mobile network providers for airtime
+- **Usage Location**: `app/api/get/airtime-networks/route.ts`
+- **Implementation**: Cached with 60-second TTL
+- **Response**: Network providers for airtime top-up
+
+### 2. Airtime Top-up
+- **Endpoint**: `/api/airtime/topup/`
+- **Method**: POST
+- **Purpose**: Execute airtime top-up transactions
+- **Usage Location**: `app/api/pay/route.ts` (category: "airtime")
+- **Required Parameters**:
+  - `network`: Mobile network provider
+  - `amount`: Airtime amount
+  - `mobile_number`: Recipient phone number
+- **Response**: Transaction confirmation with reference number
+
+### 3. Get Data Networks
+- **Endpoint**: `/api/data/networks/`
+- **Method**: GET
+- **Purpose**: Fetch mobile network providers for data
+- **Usage Location**: `app/api/get/data-plans/route.ts`
+- **Implementation**: Cached with 60-second TTL
+- **Response**: Network providers for data plans
+
+### 4. Get Data Plans by Network
+- **Endpoint**: `/api/data/plans/?network={network_code}`
+- **Method**: GET
+- **Purpose**: Fetch data plans for a specific network
+- **Usage Location**: `app/api/get/data-plans/route.ts`
+- **Required Parameters**:
+  - `network`: Network code
+- **Response**: Data plans for the specified network
+
+### 5. Purchase Data
+- **Endpoint**: `/api/data/purchase/`
+- **Method**: POST
+- **Purpose**: Execute mobile data top-up transactions
+- **Usage Location**: `app/api/pay/route.ts` (category: "data")
+- **Required Parameters**:
+  - `network`: Mobile network provider
+  - `mobile_number`: Recipient phone number
+  - `plan_code`: Selected data plan ID
+- **Response**: Transaction confirmation with reference number
+
+### 6. Get Cable TV Providers
+- **Endpoint**: `/api/cable/providers/`
+- **Method**: GET
+- **Purpose**: Fetch cable TV providers
+- **Usage Location**: `app/api/get/cable-plans/route.ts`
+- **Implementation**: Cached with 60-second TTL
+- **Response**: Cable providers (DStv, Startimes, etc.)
+
+### 7. Get Cable TV Plans by Provider
+- **Endpoint**: `/api/cable/plans/{provider_code}/`
+- **Method**: GET
+- **Purpose**: Fetch cable TV subscription plans for a specific provider
+- **Usage Location**: `app/api/get/cable-plans/route.ts`
+- **Required Parameters**:
+  - `provider_code`: Cable TV provider code
+- **Response**: Subscription plans and pricing for the provider
+
+### 8. Verify Cable TV Customer
+- **Endpoint**: `/api/cable/verify/`
+- **Method**: POST
+- **Purpose**: Verify cable TV smart card details and customer information
+- **Usage Location**: `app/api/verify/smartcard/route.ts`
+- **Required Parameters**:
+  - `iuc`: Decoder smart card number
+  - `identifier`: Cable TV provider code
+- **Response**: Customer verification with name confirmation
+
+### 9. Pay Cable TV Bill
+- **Endpoint**: `/api/cable/subscribe/`
+- **Method**: POST
+- **Purpose**: Execute cable TV subscription payments
+- **Usage Location**: `app/api/pay/route.ts` (category: "cable")
+- **Required Parameters**:
+  - `identifier`: Cable TV provider code
+  - `plan`: Subscription plan ID
+  - `iuc`: Decoder smart card number
+  - `phone`: Customer phone number
+  - `amount`: Payment amount
+- **Response**: Transaction confirmation with reference number
+
+### 10. Get Electricity Plans
 - **Endpoint**: `/api/electricity/plans/?identifier=electricity`
 - **Method**: GET
 - **Purpose**: Fetch available electricity distribution companies and meter types
 - **Usage Location**: `app/api/get/electricity-plans/route.ts`
-- **Implementation**: Cached with 60-second TTL, falls back to hardcoded data
+- **Implementation**: Cached with 60-second TTL
 - **Response**: Electricity providers with available plans
 
-### 2. Verify Electricity Meter Number
+### 11. Verify Electricity Meter Number
 - **Endpoint**: `/api/electricity/verify/?identifier=electricity&meter={meter}&plan={plan}&type={type}`
 - **Method**: GET
 - **Purpose**: Verify electricity meter details and customer information
@@ -57,7 +144,7 @@ All fetch calls follow consistent patterns:
   - `type`: Meter type (prepaid or postpaid)
 - **Response**: Customer verification with name confirmation
 
-### 3. Electricity Meter Recharge
+### 12. Electricity Meter Recharge
 - **Endpoint**: `/api/electricity/subscribe/`
 - **Method**: POST
 - **Purpose**: Execute electricity bill payments
@@ -105,13 +192,13 @@ All API requests use unique reference IDs to track transactions and ensure idemp
 ### Reference ID Usage by Endpoint Type
 
 #### Payment Endpoints (Purchase)
-- **Parameter Name**: `reference`
+- **Parameter Name**: Included in request body
 - **Purpose**: Track payment transactions
 - **Endpoints**: All payment endpoints
 - **Response**: Returns transaction reference for confirmation
 
 #### Verification Endpoints (Customer Check)
-- **Parameter Name**: Included in query parameters
+- **Parameter Name**: Included in query parameters or request body
 - **Purpose**: Track verification requests
 - **Endpoints**: Verification endpoints
 - **Response**: Verification confirmation (no transaction created)
@@ -124,7 +211,7 @@ All API requests use unique reference IDs to track transactions and ensure idemp
 
 ### Bill Payment Flow
 1. **Data Fetching**: GET endpoints cache responses for 60 seconds
-2. **User Selection**: Frontend displays cached/hardcoded options
+2. **User Selection**: Frontend displays data fetched from API
 3. **Verification**: Customer details verified before payment
 4. **Payment Execution**: Blockchain transaction confirmed first
 5. **Bill Payment**: API call executed after blockchain confirmation
@@ -135,8 +222,8 @@ All bill payment API calls require:
 - `PEYFLEX_API_KEY`: Token for authorization in the format `Token {api_key}`
 
 ### Error Handling
-- **Network failures**: Graceful fallback to hardcoded data
-- **API failures**: Silent failures with cached data usage
+- **Network failures**: Graceful fallback to cached data
+- **API failures**: Error responses with specific error messages
 - **Transaction failures**: Error responses with specific error messages
 - **Blockchain failures**: Transaction timeout after 60 seconds
 

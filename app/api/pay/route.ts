@@ -17,6 +17,29 @@ export async function POST(request: NextRequest) {
 
     let result
     switch (category) {
+      case "airtime":
+        result = await callPeyflexApi("/api/airtime/topup/", {
+          network: userInputs.network,
+          amount: ngnAmount,
+          mobile_number: userInputs.phoneNumber
+        })
+        break
+      case "data":
+        result = await callPeyflexApi("/api/data/purchase/", {
+          network: userInputs.network,
+          mobile_number: userInputs.phoneNumber,
+          plan_code: userInputs.planId
+        })
+        break
+      case "cable":
+        result = await callPeyflexApi("/api/cable/subscribe/", {
+          identifier: userInputs.provider,
+          plan: userInputs.planId,
+          iuc: userInputs.smartCardNumber,
+          phone: userInputs.phoneNumber,
+          amount: ngnAmount.toString()
+        })
+        break
       case "electricity":
         result = await callPeyflexApi("/api/electricity/subscribe/", {
           identifier: "electricity",
@@ -27,9 +50,8 @@ export async function POST(request: NextRequest) {
           phone: userInputs.phoneNumber
         })
         break
-      // Other categories would need to be updated similarly
       default:
-        return NextResponse.json({ error: "Invalid category or not yet implemented for Peyflex" }, { status: 400 })
+        return NextResponse.json({ error: "Invalid category" }, { status: 400 })
     }
 
     if (!result.success) {
