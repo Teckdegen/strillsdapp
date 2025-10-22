@@ -54,8 +54,8 @@ export default function AirtimeSection() {
       pollInterval: 60000, // Changed to 1 minute polling
       fallbackData: {
         success: false,
-        networks: ["MTN NG", "AIRTEL NG", "GLO NG", "9MOBILE"],
-        fromApi: false, // Flag to indicate if data is from API
+        networks: [],
+        fromApi: false,
       },
     },
   )

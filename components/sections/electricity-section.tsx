@@ -58,13 +58,8 @@ export default function ElectricitySection() {
       pollInterval: 60000, // Changed to 1 minute polling
       fallbackData: {
         success: false,
-        providers: [
-          { id: "eko-electric", name: "Eko (EKEDC)", code: "eko-electric" },
-          { id: "ikeja-electric", name: "Ikeja (IKEDC)", code: "ikeja-electric" },
-          { id: "abuja-electric", name: "Abuja (AEDC)", code: "abuja-electric" },
-          { id: "enugu-electric", name: "Enugu (EEDC)", code: "enugu-electric" },
-        ],
-        fromApi: false, // Flag to indicate if data is from API
+        providers: [],
+        fromApi: false,
       },
     },
   )

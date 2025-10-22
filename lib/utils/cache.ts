@@ -14,7 +14,7 @@ export function useApiCache<T>(
   fetchFn: () => Promise<T>,
   options: { pollInterval?: number; fallbackData?: T } = {},
 ) {
-  const { pollInterval = 60000, fallbackData } = options
+  const { pollInterval = 60000, fallbackData } = options // Changed default to 1 minute (60000ms)
   const [data, setData] = useState<T | undefined>(fallbackData)
   const [loading, setLoading] = useState(!fallbackData)
   const [error, setError] = useState<string>("")
@@ -56,7 +56,7 @@ export function useApiCache<T>(
     // Initial fetch
     fetchData()
 
-    // Poll at specified interval
+    // Poll at specified interval (1 minute by default)
     pollTimeoutRef.current = setInterval(fetchData, pollInterval)
 
     return () => {

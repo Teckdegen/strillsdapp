@@ -60,10 +60,10 @@ export default function DataSection() {
       pollInterval: 60000, // Changed to 1 minute polling
       fallbackData: {
         success: true,
-        networks: ["MTN NG", "AIRTEL NG", "GLO NG", "9MOBILE"],
+        networks: [],
         plansByNetwork: {},
         allPlans: [],
-        fromApi: false, // Flag to indicate if data is from API
+        fromApi: false,
       },
     },
   )

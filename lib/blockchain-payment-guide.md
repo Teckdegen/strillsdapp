@@ -39,7 +39,7 @@ Example:
 - Once confirmed (transaction hash received), system proceeds to step 5
 
 ### 5. Backend Payment Processing
-After blockchain confirmation, the system calls your bill API with:
+After blockchain confirmation, the system calls the Peyflex bill API with:
 \`\`\`json
 {
   "category": "data|airtime|electricity|cable",
@@ -56,7 +56,7 @@ After blockchain confirmation, the system calls your bill API with:
 
 ### 6. Bill Execution
 - Your backend receives the payment confirmation
-- Your backend executes the bill purchase (sends data, airtime, etc.)
+- Your backend executes the bill purchase through Peyflex API (sends data, airtime, etc.)
 - Your backend returns confirmation with token/reference
 
 ### 7. User Confirmation
@@ -103,33 +103,33 @@ const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash })
 
 ## Caching System
 
-### 5-Second Polling with Fallback
+### 1-Minute Polling with Fallback
 The system implements intelligent caching to handle API failures:
 
 \`\`\`typescript
-// Each API call is cached with 5-second polling
+// Each API call is cached with 1-minute polling
 useApiCache(
   "data-plans",
   async () => {
     const res = await fetch("/api/get/data-plans", { method: "POST" })
     return res.json()
   },
-  { pollInterval: 5000, fallbackData: {...} }
+  { pollInterval: 60000, fallbackData: {...} }
 )
 \`\`\`
 
 ### Fallback Behavior
-1. **First Call**: Fetches fresh data from API
+1. **First Call**: Fetches fresh data from Peyflex API
 2. **Success**: Stores data in cache, displays to user
 3. **Failure**: Uses previously cached data (if available)
-4. **No Cache**: Uses fallback data (hardcoded networks/plans)
-5. **Retry**: Automatically retries every 5 seconds
+4. **No Cache**: Uses fallback data (empty structures)
+5. **Retry**: Automatically retries every 1 minute
 
 ### Benefits
 - **Resilience**: App works even if API is temporarily down
 - **Performance**: Cached data loads instantly
 - **User Experience**: No blank screens or loading states
-- **Automatic Recovery**: Retries every 5 seconds until API recovers
+- **Automatic Recovery**: Retries every 1 minute until API recovers
 
 ## Security Considerations
 
@@ -170,7 +170,7 @@ useApiCache(
 - Solution: Ensure wallet is connected to Flare network
 
 **"API call failed"**
-- Solution: System uses cached data; API will retry every 5 seconds
+- Solution: System uses cached data; API will retry every 1 minute
 
 ## Testing
 
@@ -194,10 +194,7 @@ NEXT_PUBLIC_TREASURY_ADDRESS=0x...
 NEXT_PUBLIC_FLARE_RPC_URL=https://flare-api.flare.network/ext/C/rpc
 NEXT_PUBLIC_COINGECKO_API_URL=https://api.coingecko.com/api/v3
 NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_project_id
-BILL_API_BASE_URL=https://your-api.com
-APP_ID=your_app_id
-BUSINESS_CODE=your_business_code
-SECRET_KEY=your_secret_key
+PEYFLEX_API_KEY=your_peyflex_api_key
 \`\`\`
 
 ## Support

@@ -63,12 +63,9 @@ export default function CableSection() {
       pollInterval: 60000, // Changed to 1 minute polling
       fallbackData: {
         success: false,
-        providers: [
-          { id: "dstv", name: "DStv", code: "dstv" },
-          { id: "startimes", name: "Startimes", code: "Startimes" },
-        ],
+        providers: [],
         plans: [],
-        fromApi: false, // Flag to indicate if data is from API
+        fromApi: false,
       },
     },
   )
