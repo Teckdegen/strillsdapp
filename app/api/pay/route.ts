@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { generateRequestId } from "@/lib/utils/request-id"
 import { waitForTransactionConfirmation } from "@/lib/utils/flare-rpc"
-import { callBillApi } from "@/lib/utils/api-client"
+import { callPeyflexApi } from "@/lib/utils/api-client"
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,49 +15,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Transaction failed on blockchain" }, { status: 400 })
     }
 
-    const requestId = generateRequestId()
-
     let result
     switch (category) {
-      case "data":
-        result = await callBillApi("/DataPurchase/buyData", {
-          network: userInputs.network,
-          providerPlanCode: userInputs.planId,
-          phoneNumber: userInputs.phoneNumber,
-          reference: requestId,
-        })
-        break
-      case "airtime":
-        result = await callBillApi("/Airtime/buyAirtime", {
-          network: userInputs.network,
-          phoneNumber: userInputs.phoneNumber,
-          reference: requestId,
-          amount: ngnAmount,
-        })
-        break
       case "electricity":
-        result = await callBillApi("/Electricity/buyElectricity", {
-          providerCode: userInputs.disco,
-          providerPlanCode: userInputs.meterType,
-          meterNumber: userInputs.meterNumber,
-          customerName: userInputs.customerName,
-          phoneNumber: userInputs.phoneNumber,
-          reference: requestId,
-          amount: ngnAmount,
+        result = await callPeyflexApi("/api/electricity/subscribe/", {
+          identifier: "electricity",
+          meter: userInputs.meterNumber,
+          plan: userInputs.disco,
+          amount: ngnAmount.toString(),
+          type: userInputs.meterType,
+          phone: userInputs.phoneNumber
         })
         break
-      case "cable":
-        result = await callBillApi("/CableTV/buyCableTV", {
-          providerCode: userInputs.provider,
-          providerPlanCode: userInputs.planId,
-          phoneNumber: userInputs.phoneNumber,
-          smartCardNumber: userInputs.smartCardNumber,
-          customerName: userInputs.customerName,
-          reference: requestId,
-        })
-        break
+      // Other categories would need to be updated similarly
       default:
-        return NextResponse.json({ error: "Invalid category" }, { status: 400 })
+        return NextResponse.json({ error: "Invalid category or not yet implemented for Peyflex" }, { status: 400 })
     }
 
     if (!result.success) {
@@ -67,8 +38,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      token: result.token || result.reference || requestId,
-      reference: result.reference || requestId,
+      token: result.token || result.reference || result.transactionId,
+      reference: result.reference || result.transactionId,
       message: result.message || "Payment successful",
     })
   } catch (error: any) {

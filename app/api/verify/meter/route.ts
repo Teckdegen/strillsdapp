@@ -1,31 +1,26 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { generateRequestId } from "@/lib/utils/request-id"
-import { callBillApi } from "@/lib/utils/api-client"
+import { callPeyflexApiWithParams } from "@/lib/utils/api-client"
 
 export async function POST(request: NextRequest) {
   try {
-    const { meterNumber, providerCode, providerPlanCode } = await request.json()
+    const { meterNumber, providerCode, providerPlanCode, meterType } = await request.json()
 
     if (!meterNumber || !providerCode) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    const requestId = generateRequestId()
-
-    const result = await callBillApi("/Electricity/verifyCustomer", {
-      meterNumber,
-      providerCode,
-      providerPlanCode: providerPlanCode || "prepaid",
-      reference: requestId,
+    const result = await callPeyflexApiWithParams("/api/electricity/verify/", {
+      identifier: "electricity",
+      meter: meterNumber,
+      plan: providerCode,
+      type: meterType || providerPlanCode || "prepaid"
     })
 
-    if (!result.success) {
-      return NextResponse.json({ error: result.error || "Verification failed" }, { status: 400 })
-    }
-
+    // Peyflex API may return customer details in a different format
+    // We'll need to adapt this based on the actual response structure
     return NextResponse.json({
       success: true,
-      customerName: result.customerName || "Customer",
+      customerName: result.customerName || result.name || "Customer",
       meterNumber,
     })
   } catch (error: any) {

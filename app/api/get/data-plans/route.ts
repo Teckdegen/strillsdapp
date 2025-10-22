@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { HARDCODED_DATA } from "@/lib/data/hardcoded-data"
 import { generateRequestId } from "@/lib/utils/request-id"
-import { callBillApi } from "@/lib/utils/api-client"
+// Example of how to import and use a new API client
+// import { callNewBillApi } from "@/lib/utils/api-client"
 
 let cachedDataPlans: any = null
 let lastDataPlansFetch = 0
@@ -13,6 +14,8 @@ export async function POST(request: NextRequest) {
     if (now - lastDataPlansFetch > 60000) {
       try {
         const requestId = generateRequestId()
+        // Example of how to use a new API client
+        // const result = await callNewBillApi("/data/plans", { requestId })
         const result = await callBillApi("/DataPurchase/getDataInfo", {})
         if (result?.data) {
           cachedDataPlans = result

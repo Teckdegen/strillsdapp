@@ -5,14 +5,11 @@ This document outlines all the API endpoints used in the Strills DApp, including
 ## Base Configuration
 
 ### Bill Payment API
-- **Base URL**: `https://businessapi.cashwyre.com/api/v1.0`
+- **Base URL**: `https://client.peyflex.com.ng`
 - **HTTP Client**: Node.js native `fetch` API (no external dependencies)
-- **Authentication**: Bearer token using `SECRET_KEY` environment variable
+- **Authentication**: Token-based using `PEYFLEX_API_KEY` environment variable
 - **Content-Type**: `application/json`
-- **Method**: All requests use POST method
-- **Additional Headers**:
-  - `appId`: From `APP_ID` environment variable
-  - `businessCode`: From `BUSINESS_CODE` environment variable
+- **Method**: POST for most requests, GET for some verification endpoints
 
 ## Implementation Details
 
@@ -38,116 +35,41 @@ All fetch calls follow consistent patterns:
 - ✅ Appropriate headers (Content-Type, Authorization)
 - ✅ Promise-based async/await syntax
 
-## Bill Payment API Endpoints
+## Peyflex API Endpoints
 
-### 1. Get Airtime Network Information
-- **Endpoint**: `/Airtime/getAirtimeInfo`
-- **Method**: POST
-- **Purpose**: Fetch available mobile network providers and their airtime plans
-- **Usage Location**: `app/api/get/airtime-networks/route.ts`
-- **Implementation**: Cached with 60-second TTL, falls back to hardcoded data
-- **Response**: Network providers with available airtime amounts
-
-### 2. Get Cable TV Information
-- **Endpoint**: `/CableTV/getCableTVInfo`
-- **Method**: POST
-- **Purpose**: Fetch cable TV providers and subscription plans
-- **Usage Location**: `app/api/get/cable-plans/route.ts`
-- **Implementation**: Cached with 60-second TTL, falls back to hardcoded data
-- **Response**: Cable providers (DStv, Startimes) with subscription plans and pricing
-
-### 3. Get Data Plan Information
-- **Endpoint**: `/DataPurchase/getDataInfo`
-- **Method**: POST
-- **Purpose**: Fetch mobile data plans from all network providers
-- **Usage Location**: `app/api/get/data-plans/route.ts`
-- **Implementation**: Cached with 60-second TTL, falls back to hardcoded data
-- **Response**: Data plans organized by network (MTN, Airtel, Glo, 9mobile) with pricing
-
-### 4. Get Electricity Provider Information
-- **Endpoint**: `/Electricity/getElectricityInfo`
-- **Method**: POST
-- **Purpose**: Fetch electricity distribution companies and meter types
+### 1. Get Electricity Plans
+- **Endpoint**: `/api/electricity/plans/?identifier=electricity`
+- **Method**: GET
+- **Purpose**: Fetch available electricity distribution companies and meter types
 - **Usage Location**: `app/api/get/electricity-plans/route.ts`
 - **Implementation**: Cached with 60-second TTL, falls back to hardcoded data
-- **Response**: Electricity providers (AEDC, EKEDC, etc.) with prepaid meter support
+- **Response**: Electricity providers with available plans
 
-### 5. Purchase Data
-- **Endpoint**: `/DataPurchase/buyData`
-- **Method**: POST
-- **Purpose**: Execute mobile data top-up transactions
-- **Usage Location**: `app/api/pay/route.ts` (category: "data")
+### 2. Verify Electricity Meter Number
+- **Endpoint**: `/api/electricity/verify/?identifier=electricity&meter={meter}&plan={plan}&type={type}`
+- **Method**: GET
+- **Purpose**: Verify electricity meter details and customer information
+- **Usage Location**: `app/api/verify/meter/route.ts`
 - **Required Parameters**:
-  - `network`: Mobile network provider
-  - `providerPlanCode`: Selected data plan ID
-  - `phoneNumber`: Recipient phone number
-  - `reference`: Unique transaction reference
-- **Response**: Transaction confirmation with reference number
+  - `identifier`: Must be "electricity"
+  - `meter`: Customer meter number
+  - `plan`: Electricity distribution company code
+  - `type`: Meter type (prepaid or postpaid)
+- **Response**: Customer verification with name confirmation
 
-### 6. Purchase Airtime
-- **Endpoint**: `/Airtime/buyAirtime`
-- **Method**: POST
-- **Purpose**: Execute airtime top-up transactions
-- **Usage Location**: `app/api/pay/route.ts` (category: "airtime")
-- **Required Parameters**:
-  - `network`: Mobile network provider
-  - `phoneNumber`: Recipient phone number
-  - `amount`: Airtime amount in NGN
-  - `reference`: Unique transaction reference
-- **Response**: Transaction confirmation with reference number
-
-### 7. Pay Electricity Bill
-- **Endpoint**: `/Electricity/buyElectricity`
+### 3. Electricity Meter Recharge
+- **Endpoint**: `/api/electricity/subscribe/`
 - **Method**: POST
 - **Purpose**: Execute electricity bill payments
 - **Usage Location**: `app/api/pay/route.ts` (category: "electricity")
 - **Required Parameters**:
-  - `providerCode`: Electricity distribution company code
-  - `providerPlanCode`: Meter type (typically "prepaid")
-  - `meterNumber`: Customer meter number
-  - `customerName`: Customer name
-  - `phoneNumber`: Customer phone number
-  - `amount`: Payment amount in NGN
-  - `reference`: Unique transaction reference
+  - `identifier`: Must be "electricity"
+  - `meter`: Customer meter number
+  - `plan`: Electricity distribution company code
+  - `amount`: Payment amount
+  - `type`: Meter type (prepaid or postpaid)
+  - `phone`: Customer phone number
 - **Response**: Transaction confirmation with reference number
-
-### 8. Pay Cable TV Bill
-- **Endpoint**: `/CableTV/buyCableTV`
-- **Method**: POST
-- **Purpose**: Execute cable TV subscription payments
-- **Usage Location**: `app/api/pay/route.ts` (category: "cable")
-- **Required Parameters**:
-  - `providerCode`: Cable TV provider (dstv, Startimes)
-  - `providerPlanCode`: Subscription plan ID
-  - `phoneNumber`: Customer phone number
-  - `smartCardNumber`: Decoder smart card number
-  - `customerName`: Customer name
-  - `reference`: Unique transaction reference
-- **Response**: Transaction confirmation with reference number
-
-### 9. Verify Electricity Customer
-- **Endpoint**: `/Electricity/verifyCustomer`
-- **Method**: POST
-- **Purpose**: Verify electricity meter details and customer information
-- **Usage Location**: `app/api/verify/meter/route.ts`
-- **Required Parameters**:
-  - `meterNumber`: Customer meter number
-  - `providerCode`: Electricity distribution company code
-  - `providerPlanCode`: Meter type (default: "prepaid")
-  - `reference`: Unique transaction reference
-- **Response**: Customer verification with name confirmation
-
-### 10. Verify Cable TV Customer
-- **Endpoint**: `/CableTV/verifyCustomer`
-- **Method**: POST
-- **Purpose**: Verify cable TV smart card details and customer information
-- **Usage Location**: `app/api/verify/smartcard/route.ts`
-- **Required Parameters**:
-  - `smartCardNumber`: Decoder smart card number
-  - `providerCode`: Cable TV provider code
-  - `providerPlanCode`: Subscription plan ID
-  - `reference`: Unique request identifier
-- **Response**: Customer verification with name confirmation
 
 ## External API Endpoints
 
@@ -185,33 +107,20 @@ All API requests use unique reference IDs to track transactions and ensure idemp
 #### Payment Endpoints (Purchase)
 - **Parameter Name**: `reference`
 - **Purpose**: Track payment transactions
-- **Endpoints**: All `/buy*` endpoints (buyData, buyAirtime, buyElectricity, buyCableTV)
+- **Endpoints**: All payment endpoints
 - **Response**: Returns transaction reference for confirmation
 
 #### Verification Endpoints (Customer Check)
-- **Parameter Name**: `reference`
+- **Parameter Name**: Included in query parameters
 - **Purpose**: Track verification requests
-- **Endpoints**: `/verifyCustomer` for electricity and cable TV
+- **Endpoints**: Verification endpoints
 - **Response**: Verification confirmation (no transaction created)
 
 ### Reference ID Flow
 1. **Generation**: `generateRequestId()` creates unique ID
-2. **API Request**: ID sent as `reference` parameter
+2. **API Request**: ID sent as part of request parameters
 3. **API Response**: ID returned in response for tracking
 4. **Client Response**: ID provided to user for transaction confirmation
-
-### Example Usage
-```typescript
-const requestId = generateRequestId() // "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6"
-
-// Payment request
-const result = await callBillApi("/DataPurchase/buyData", {
-  network: "mtn",
-  providerPlanCode: "PSPLAN_177",
-  phoneNumber: "08031234567",
-  reference: requestId, // 30-char unique ID
-})
-```
 
 ### Bill Payment Flow
 1. **Data Fetching**: GET endpoints cache responses for 60 seconds
@@ -223,9 +132,7 @@ const result = await callBillApi("/DataPurchase/buyData", {
 
 ### Authentication
 All bill payment API calls require:
-- `SECRET_KEY`: Bearer token for authorization
-- `APP_ID`: Application identifier
-- `BUSINESS_CODE`: Business account identifier
+- `PEYFLEX_API_KEY`: Token for authorization in the format `Token {api_key}`
 
 ### Error Handling
 - **Network failures**: Graceful fallback to hardcoded data
@@ -236,15 +143,12 @@ All bill payment API calls require:
 ## Environment Variables Required
 
 ```
-SECRET_KEY=your_secret_key_here
-APP_ID=your_app_id_here
-BUSINESS_CODE=your_business_code_here
-BASE_URL=https://businessapi.cashwyre.com/api/v1.0
+PEYFLEX_API_KEY=your_peyflex_api_key_here
 ```
 
 ## Response Format
 
-All bill payment API responses follow this structure:
+All Peyflex API responses follow this structure:
 ```json
 {
   "success": true,
