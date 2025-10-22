@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
           })) || [],
       ),
       updated,
+      fromApi: true, // Indicate that this data is from the API
     })
   } catch (error: any) {
     const providers = HARDCODED_DATA.electricity.data[0].providers
@@ -61,7 +62,8 @@ export async function POST(request: NextRequest) {
             code: plan.code,
           })) || [],
       ),
-      updated,
+      updated: false,
+      fromApi: false, // Indicate that this data is from fallback
     })
   }
 }

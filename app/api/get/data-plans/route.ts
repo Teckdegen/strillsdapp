@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
       plansByNetwork,
       allPlans: Object.values(plansByNetwork).flat(),
       updated,
+      fromApi: true, // Indicate that this data is from the API
     })
   } catch (error: any) {
     const providers = HARDCODED_DATA.data.data[0].providers
@@ -67,7 +68,8 @@ export async function POST(request: NextRequest) {
       networks: providers.map((p: any) => p.name),
       plansByNetwork,
       allPlans: Object.values(plansByNetwork).flat(),
-      updated,
+      updated: false,
+      fromApi: false, // Indicate that this data is from fallback
     })
   }
 }

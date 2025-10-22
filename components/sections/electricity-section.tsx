@@ -45,6 +45,7 @@ export default function ElectricitySection() {
   const [success, setSuccess] = useState("")
   const [verifying, setVerifying] = useState(false)
   const [customerName, setCustomerName] = useState("")
+  const [message, setMessage] = useState("")
 
   const { data: discoData, loading: loadingPlans } = useApiCache(
     "electricity-plans",
@@ -63,6 +64,7 @@ export default function ElectricitySection() {
           { id: "abuja-electric", name: "Abuja (AEDC)", code: "abuja-electric" },
           { id: "enugu-electric", name: "Enugu (EEDC)", code: "enugu-electric" },
         ],
+        fromApi: false, // Flag to indicate if data is from API
       },
     },
   )
@@ -79,6 +81,14 @@ export default function ElectricitySection() {
 
   const discos = discoData?.providers || []
   const rate = rateData?.rate || 1
+
+  useEffect(() => {
+    if (discoData && discoData.fromApi && discoData.updated) {
+      setMessage("Electricity providers updated")
+      const timer = setTimeout(() => setMessage(""), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [discoData])
 
   useEffect(() => {
     if (error) {
@@ -212,6 +222,11 @@ export default function ElectricitySection() {
         </div>
       </CardHeader>
       <CardContent className="space-y-5 pt-6">
+        {message && (
+          <div className="p-4 bg-purple-500/20 border border-purple-500/50 text-black rounded-lg backdrop-blur-sm animate-fade">
+            {message}
+          </div>
+        )}
         {error && (
           <div className="p-4 bg-purple-500/20 border border-purple-500/50 text-black rounded-lg backdrop-blur-sm animate-fade">
             {error}

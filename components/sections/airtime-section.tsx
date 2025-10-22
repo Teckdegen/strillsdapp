@@ -41,6 +41,7 @@ export default function AirtimeSection() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [message, setMessage] = useState("")
 
   const { data: networksData, loading: loadingNetworks } = useApiCache(
     "airtime-networks",
@@ -54,6 +55,7 @@ export default function AirtimeSection() {
       fallbackData: {
         success: false,
         networks: ["MTN NG", "AIRTEL NG", "GLO NG", "9MOBILE"],
+        fromApi: false, // Flag to indicate if data is from API
       },
     },
   )
@@ -77,6 +79,14 @@ export default function AirtimeSection() {
       return () => clearTimeout(timer)
     }
   }, [error])
+
+  useEffect(() => {
+    if (networksData && networksData.fromApi && networksData.updated) {
+      setMessage("Networks updated")
+      const timer = setTimeout(() => setMessage(""), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [networksData])
 
   const handlePay = async () => {
     if (!network || !customAmount || !phone || !walletClient) {
@@ -161,6 +171,11 @@ export default function AirtimeSection() {
         </div>
       </CardHeader>
       <CardContent className="space-y-5 pt-6">
+        {message && (
+          <div className="p-4 bg-purple-500/20 border border-purple-500/50 text-black rounded-lg backdrop-blur-sm animate-fade">
+            {message}
+          </div>
+        )}
         {error && (
           <div className="p-4 bg-purple-500/20 border border-purple-500/50 text-black rounded-lg backdrop-blur-sm animate-fade">
             {error}

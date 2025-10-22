@@ -63,6 +63,7 @@ export default function DataSection() {
         networks: ["MTN NG", "AIRTEL NG", "GLO NG", "9MOBILE"],
         plansByNetwork: {},
         allPlans: [],
+        fromApi: false, // Flag to indicate if data is from API
       },
     },
   )
@@ -91,12 +92,12 @@ export default function DataSection() {
   }, [error])
 
   useEffect(() => {
-    if (plansData?.updated) {
-      setMessage("Plans updated")
-      const timer = setTimeout(() => setMessage(""), 1000)
+    if (plansData && plansData.fromApi && plansData.updated) {
+      setMessage("Data plans updated")
+      const timer = setTimeout(() => setMessage(""), 3000)
       return () => clearTimeout(timer)
     }
-  }, [plansData?.updated])
+  }, [plansData])
 
   const plans = network && plansData?.plansByNetwork?.[network] ? plansData.plansByNetwork[network] : []
   const networks = plansData?.networks || []

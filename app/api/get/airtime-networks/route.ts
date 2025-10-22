@@ -31,12 +31,14 @@ export async function POST(request: NextRequest) {
       success: true,
       networks: providers.map((p: any) => p.name),
       updated,
+      fromApi: true, // Indicate that this data is from the API
     })
   } catch (error: any) {
     return NextResponse.json({
       success: true,
       networks: HARDCODED_DATA.data.data[0].providers.map((p: any) => p.name),
-      updated,
+      updated: false,
+      fromApi: false, // Indicate that this data is from fallback
     })
   }
 }

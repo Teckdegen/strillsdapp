@@ -68,6 +68,7 @@ export default function CableSection() {
           { id: "startimes", name: "Startimes", code: "Startimes" },
         ],
         plans: [],
+        fromApi: false, // Flag to indicate if data is from API
       },
     },
   )
@@ -85,6 +86,14 @@ export default function CableSection() {
   const providers = cableData?.providers || []
   const plans = cableData?.plans || []
   const rate = rateData?.rate || 1
+
+  useEffect(() => {
+    if (cableData && cableData.fromApi && cableData.updated) {
+      setMessage("Cable providers updated")
+      const timer = setTimeout(() => setMessage(""), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [cableData])
 
   useEffect(() => {
     if (error) {
