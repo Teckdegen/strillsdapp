@@ -1,73 +1,104 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { callPeyflexPublicApi } from "@/lib/utils/api-client"
 
-let cachedDataPlans: any = null
-let lastDataPlansFetch = 0
+let cachedNetworks: any = null
+let cachedPlansByNetwork: Record<string, any[]> = {}
+let lastNetworksFetch = 0
+let lastPlansFetch: Record<string, number> = {}
 
 export async function POST(request: NextRequest) {
   let updated = false
   try {
     const now = Date.now()
-    if (now - lastDataPlansFetch > 60000) {
+    
+    // Always fetch networks (with caching)
+    if (now - lastNetworksFetch > 60000) {
       try {
-        // First get networks
         const networksResult = await callPeyflexPublicApi("/api/data/networks/")
         
         if (networksResult && networksResult.networks) {
-          // For each network, get plans
-          const plansByNetwork: Record<string, any[]> = {}
-          
-          for (const network of networksResult.networks) {
-            try {
-              // Get plans for this network using the correct endpoint
-              const plansResult = await callPeyflexPublicApi("/api/data/plans/", {
-                network: network.code || network.id
-              })
-              
-              plansByNetwork[network.name] = plansResult.plans?.map((plan: any) => ({
-                id: plan.code || plan.id,
-                name: plan.name,
-                amount: plan.amount,
-                ngnPrice: plan.amount,
-                network: network.name,
-              })) || []
-            } catch (planError) {
-              console.error(`Error fetching plans for network ${network.name}:`, planError)
-              plansByNetwork[network.name] = []
-            }
-          }
-          
-          cachedDataPlans = {
-            networks: networksResult.networks.map((n: any) => n.name),
-            plansByNetwork
-          }
-          
-          lastDataPlansFetch = now
+          cachedNetworks = networksResult
+          lastNetworksFetch = now
           updated = true
         }
       } catch (err) {
-        console.error("Error fetching data plans:", err)
-        // Silently fail and use cached data
+        console.error("Error fetching data networks:", err)
       }
     }
 
-    const data = cachedDataPlans || { networks: [], plansByNetwork: {} }
+    const networks = cachedNetworks?.networks || []
 
     return NextResponse.json({
       success: true,
-      networks: data.networks || [],
-      plansByNetwork: data.plansByNetwork || {},
-      allPlans: Object.values(data.plansByNetwork || {}).flat(),
+      networks: networks.map((n: any) => ({
+        id: n.code || n.id,
+        name: n.name,
+        code: n.code || n.id,
+      })) || [],
       updated,
       fromApi: true,
     })
   } catch (error: any) {
-    console.error("Data plans API error:", error)
+    console.error("Data networks API error:", error)
     return NextResponse.json({
       success: true,
       networks: [],
-      plansByNetwork: {},
-      allPlans: [],
+      updated: false,
+      fromApi: false,
+    })
+  }
+}
+
+// New endpoint to get plans for a specific network
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url)
+  const network = searchParams.get('network')
+  
+  if (!network) {
+    return NextResponse.json({
+      success: false,
+      plans: [],
+      error: "Network parameter is required"
+    })
+  }
+
+  let updated = false
+  try {
+    const now = Date.now()
+    
+    // Fetch plans for specific network (with caching)
+    if (!lastPlansFetch[network] || now - lastPlansFetch[network] > 60000) {
+      try {
+        const plansResult = await callPeyflexPublicApi(`/api/data/plans/?network=${network}`)
+        
+        if (plansResult && plansResult.plans) {
+          cachedPlansByNetwork[network] = plansResult.plans
+          lastPlansFetch[network] = now
+          updated = true
+        }
+      } catch (err) {
+        console.error(`Error fetching plans for network ${network}:`, err)
+      }
+    }
+
+    const plans = cachedPlansByNetwork[network] || []
+
+    return NextResponse.json({
+      success: true,
+      plans: plans.map((plan: any) => ({
+        id: plan.code || plan.id,
+        name: plan.name,
+        amount: plan.amount,
+        ngnPrice: plan.amount,
+      })) || [],
+      updated,
+      fromApi: true,
+    })
+  } catch (error: any) {
+    console.error(`Data plans API error for network ${network}:`, error)
+    return NextResponse.json({
+      success: true,
+      plans: [],
       updated: false,
       fromApi: false,
     })

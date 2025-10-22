@@ -12,6 +12,12 @@ import { Wifi, Loader2 } from "lucide-react"
 import { useApiCache } from "@/lib/utils/cache"
 import { calculateTotalWithFee, calculateFeeAmount } from "@/lib/data/hardcoded-data"
 
+interface DataNetwork {
+  id: string
+  name: string
+  code?: string
+}
+
 interface DataPlan {
   id: string
   name: string
@@ -45,24 +51,46 @@ export default function DataSection() {
   const [rate, setRate] = useState<number>(1650)
   const [message, setMessage] = useState("")
 
+  // Fetch networks
+  const {
+    data: networksData,
+    loading: loadingNetworks,
+    error: networksError,
+  } = useApiCache(
+    "data-networks",
+    async () => {
+      const res = await fetch("/api/get/data-plans", { method: "POST" })
+      if (!res.ok) throw new Error("Failed to fetch data networks")
+      return res.json()
+    },
+    {
+      pollInterval: 60000,
+      fallbackData: {
+        success: true,
+        networks: [],
+        fromApi: false,
+      },
+    },
+  )
+
+  // Fetch plans for selected network
   const {
     data: plansData,
     loading: loadingPlans,
-    error: cacheError,
+    error: plansError,
   } = useApiCache(
-    "data-plans",
+    `data-plans-${network}`,
     async () => {
-      const res = await fetch("/api/get/data-plans", { method: "POST" })
+      if (!network) return { plans: [], success: true, fromApi: false }
+      const res = await fetch(`/api/get/data-plans?network=${network}`)
       if (!res.ok) throw new Error("Failed to fetch data plans")
       return res.json()
     },
     {
-      pollInterval: 60000, // Changed to 1 minute polling
+      pollInterval: 60000,
       fallbackData: {
         success: true,
-        networks: [],
-        plansByNetwork: {},
-        allPlans: [],
+        plans: [],
         fromApi: false,
       },
     },
@@ -92,15 +120,28 @@ export default function DataSection() {
   }, [error])
 
   useEffect(() => {
+    if (networksData && networksData.fromApi && networksData.updated) {
+      setMessage("Data networks updated")
+      const timer = setTimeout(() => setMessage(""), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [networksData])
+
+  useEffect(() => {
     if (plansData && plansData.fromApi && plansData.updated) {
       setMessage("Data plans updated")
       const timer = setTimeout(() => setMessage(""), 3000)
       return () => clearTimeout(timer)
     }
-  }, [plansData])
+  }, [plansData, network])
 
-  const plans = network && plansData?.plansByNetwork?.[network] ? plansData.plansByNetwork[network] : []
-  const networks = plansData?.networks || []
+  // Reset plan when network changes
+  useEffect(() => {
+    setPlan("")
+  }, [network])
+
+  const networks = networksData?.networks || []
+  const plans = plansData?.plans || []
 
   const handlePay = async () => {
     if (!network) {
@@ -210,13 +251,13 @@ export default function DataSection() {
             {success}
           </div>
         )}
-        {cacheError && (
+        {(networksError || plansError) && (
           <div className="p-3 bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 rounded-lg backdrop-blur-sm text-sm">
-            {cacheError}
+            {networksError?.message || plansError?.message || "Error loading data"}
           </div>
         )}
 
-        {loadingPlans ? (
+        {loadingNetworks ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
           </div>
@@ -235,9 +276,9 @@ export default function DataSection() {
                 </SelectTrigger>
                 <SelectContent className="bg-purple-950 border-purple-500/30">
                   {networks.length > 0 ? (
-                    networks.map((net: string) => (
-                      <SelectItem key={net} value={net} className="text-white hover:bg-purple-500/20">
-                        {net}
+                    networks.map((net: DataNetwork) => (
+                      <SelectItem key={net.id} value={net.code || net.id} className="text-white hover:bg-purple-500/20">
+                        {net.name}
                       </SelectItem>
                     ))
                   ) : (
@@ -253,15 +294,19 @@ export default function DataSection() {
               <Label htmlFor="plan" className="text-purple-300">
                 Plan
               </Label>
-              <Select value={plan} onValueChange={setPlan}>
+              <Select value={plan} onValueChange={setPlan} disabled={!network || loadingPlans}>
                 <SelectTrigger
                   id="plan"
                   className="bg-purple-950/30 border-purple-500/30 text-white hover:border-purple-500/50 transition-colors"
                 >
-                  <SelectValue placeholder="Select plan" />
+                  <SelectValue placeholder={network ? "Select plan" : "Select network first"} />
                 </SelectTrigger>
                 <SelectContent className="bg-purple-950 border-purple-500/30">
-                  {plans && plans.length > 0 ? (
+                  {loadingPlans ? (
+                    <SelectItem value="loading" disabled className="text-gray-400">
+                      Loading plans...
+                    </SelectItem>
+                  ) : plans.length > 0 ? (
                     plans.map((p: DataPlan) => (
                       <SelectItem key={p.id} value={p.id} className="text-white hover:bg-purple-500/20">
                         <div className="flex items-center gap-2">
@@ -272,7 +317,7 @@ export default function DataSection() {
                     ))
                   ) : (
                     <SelectItem value="empty" disabled className="text-gray-400">
-                      No plans available
+                      {network ? "No plans available" : "Select network first"}
                     </SelectItem>
                   )}
                 </SelectContent>
@@ -296,7 +341,7 @@ export default function DataSection() {
 
         <Button
           onClick={handlePay}
-          disabled={loading || !walletClient || loadingPlans}
+          disabled={loading || !walletClient || !plan || loadingPlans}
           className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold py-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-purple-500/50"
         >
           {loading ? (
