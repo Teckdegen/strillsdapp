@@ -56,10 +56,10 @@ function WalletConnectedContent() {
 
       {/* Content Sections */}
       <div className="min-h-96">
-        {activeCategory === "data" && <DataSection />}
-        {activeCategory === "airtime" && <AirtimeSection />}
-        {activeCategory === "electricity" && <ElectricitySection />}
-        {activeCategory === "cable" && <CableSection />}
+        {activeCategory === "data" && <DataSection isActive={true} />}
+        {activeCategory === "airtime" && <AirtimeSection isActive={true} />}
+        {activeCategory === "electricity" && <ElectricitySection isActive={true} />}
+        {activeCategory === "cable" && <CableSection isActive={true} />}
       </div>
     </div>
   )

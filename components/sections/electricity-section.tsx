@@ -32,7 +32,7 @@ const USDT_ABI = [
   },
 ]
 
-export default function ElectricitySection() {
+export default function ElectricitySection({ isActive }: { isActive: boolean }) {
   const { data: walletClient } = useWalletClient()
   const publicClient = usePublicClient()
   const [disco, setDisco] = useState("")
@@ -55,12 +55,13 @@ export default function ElectricitySection() {
       return res.json()
     },
     {
-      pollInterval: 60000, // Changed to 1 minute polling
+      pollInterval: 300000, // 5 minutes
       fallbackData: {
         success: false,
         providers: [],
         fromApi: false,
       },
+      enabled: isActive, // Only fetch when section is active
     },
   )
 
@@ -71,7 +72,11 @@ export default function ElectricitySection() {
       if (!res.ok) throw new Error("Failed to fetch rates")
       return res.json()
     },
-    { pollInterval: 5000, fallbackData: { rate: 1 } },
+    { 
+      pollInterval: 300000, // 5 minutes
+      fallbackData: { rate: 1 },
+      enabled: isActive, // Only fetch when section is active
+    },
   )
 
   const discos = discoData?.providers || []

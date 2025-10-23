@@ -40,7 +40,7 @@ const USDT_ABI = [
   },
 ]
 
-export default function CableSection() {
+export default function CableSection({ isActive }: { isActive: boolean }) {
   const { data: walletClient } = useWalletClient()
   const publicClient = usePublicClient()
   const [provider, setProvider] = useState("")
@@ -61,13 +61,14 @@ export default function CableSection() {
       return res.json()
     },
     {
-      pollInterval: 60000, // Changed to 1 minute polling
+      pollInterval: 300000, // 5 minutes
       fallbackData: {
         success: false,
         providers: [],
         plans: [],
         fromApi: false,
       },
+      enabled: isActive, // Only fetch when section is active
     },
   )
 
@@ -78,7 +79,11 @@ export default function CableSection() {
       if (!res.ok) throw new Error("Failed to fetch rates")
       return res.json()
     },
-    { pollInterval: 5000, fallbackData: { rate: 1 } },
+    { 
+      pollInterval: 300000, // 5 minutes
+      fallbackData: { rate: 1 },
+      enabled: isActive, // Only fetch when section is active
+    },
   )
 
   const providers = cableData?.providers || []
@@ -86,10 +91,10 @@ export default function CableSection() {
   const rate = rateData?.rate || 1
 
   useEffect(() => {
-    if (cableData?.fromApi && cableData?.updated) {
-      setMessage("Cable providers updated");
-      const timer = setTimeout(() => setMessage(""), 3000);
-      return () => clearTimeout(timer);
+    if (cableData && cableData.fromApi && cableData.updated) {
+      setMessage("Cable providers updated")
+      const timer = setTimeout(() => setMessage(""), 3000)
+      return () => clearTimeout(timer)
     }
   }, [cableData])
 

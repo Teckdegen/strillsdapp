@@ -39,19 +39,19 @@ const USDT_ABI = [
   },
 ]
 
-export default function DataSection() {
+export default function DataSection({ isActive }: { isActive: boolean }) {
   const { data: walletClient } = useWalletClient()
   const publicClient = usePublicClient()
   const [network, setNetwork] = useState("")
   const [plan, setPlan] = useState("")
   const [phone, setPhone] = useState("")
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
+  const [error, setError] = useState<string>("")
+  const [success, setSuccess] = useState<string>("")
   const [rate, setRate] = useState<number>(1650)
   const [message, setMessage] = useState("")
 
-  // Fetch networks
+  // Fetch networks - only when section is active
   const {
     data: networksData,
     loading: loadingNetworks,
@@ -64,16 +64,17 @@ export default function DataSection() {
       return res.json()
     },
     {
-      pollInterval: 60000,
+      pollInterval: 300000, // 5 minutes
       fallbackData: {
         success: true,
         networks: [],
         fromApi: false,
       },
+      enabled: isActive, // Only fetch when section is active
     },
   )
 
-  // Fetch plans for selected network
+  // Fetch plans for selected network - only when section is active and network is selected
   const {
     data: plansData,
     loading: loadingPlans,
@@ -87,12 +88,13 @@ export default function DataSection() {
       return res.json()
     },
     {
-      pollInterval: 60000,
+      pollInterval: 300000, // 5 minutes
       fallbackData: {
         success: true,
         plans: [],
         fromApi: false,
       },
+      enabled: isActive && !!network, // Only fetch when section is active and network is selected
     },
   )
 
@@ -103,7 +105,11 @@ export default function DataSection() {
       if (!res.ok) throw new Error("Failed to fetch rates")
       return res.json()
     },
-    { pollInterval: 5000, fallbackData: { rate: 1650, success: true } },
+    { 
+      pollInterval: 300000, // 5 minutes
+      fallbackData: { rate: 1650, success: true },
+      enabled: isActive, // Only fetch when section is active
+    },
   )
 
   useEffect(() => {
@@ -253,7 +259,7 @@ export default function DataSection() {
         )}
         {(networksError || plansError) && (
           <div className="p-3 bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 rounded-lg backdrop-blur-sm text-sm">
-            {networksError?.message || plansError?.message || "Error loading data"}
+            {networksError || plansError || "Error loading data"}
           </div>
         )}
 
